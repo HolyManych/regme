@@ -33,7 +33,7 @@ def check(message):
     bot.send_message(message.chat.id, "Проверяю, подожди")
     lock.acquire()
     try:
-        r = requests.get(urlbase + name, headers=config.header)
+        r = requests.get(config.urlbase + name, headers=config.header)
         data = json.loads(r.text)
         if "stats" in data:
             bot.send_message(message.chat.id, "Ваш WinRate" + " - " + str(data['stats']['p2']["winRatio"]["value"]))
