@@ -31,12 +31,15 @@ def check(message):
     name = message.text
     bot.send_message(message.chat.id, "Проверяю, подожди")
     lock.acquire()
-    r = requests.get(urlbase + name, headers=config.header)
-    data = json.loads(r.text)
-    if "stats" in data:
-        bot.send_message(message.chat.id, "Ваш WinRate" + " - " + str(data['stats']['p2']["winRatio"]["value"]))
-    else:
-        bot.send_message(message.chat.id, "Не удалось найти такой ник")
+    try:
+        r = requests.get(urlbase + name, headers=config.header)
+        data = json.loads(r.text)
+        if "stats" in data:
+            bot.send_message(message.chat.id, "Ваш WinRate" + " - " + str(data['stats']['p2']["winRatio"]["value"]))
+        else:
+            bot.send_message(message.chat.id, "Не удалось найти такой ник")
+    except Exception as e:
+        bot.send_message(message.chat.id, "Что-то пошло не так, попробуйте позже")
     time.sleep(2)
     lock.release()
 
