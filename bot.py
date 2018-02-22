@@ -28,7 +28,7 @@ def addme(message):
 
 
 def check(message):
-    lock = Lock()
+    lock = threading.Lock()
     name = message.text
     bot.send_message(message.chat.id, "Проверяю, подожди")
     lock.acquire()
