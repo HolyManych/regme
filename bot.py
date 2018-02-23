@@ -33,7 +33,7 @@ def checkPlayer(nick):
     return db.users_telegram.find({"fortnite_name": nick}).count() == 1
 
 def checkChatId(chatid):
-    return db.users_telegram.find({"_id": nick}).count() == 1
+    return db.users_telegram.find({"_id": chatid}).count() == 1
 #coll.update({"name": "Петр"}, {"surname": "Новосельцев", "age": 25})
 def setStatus(chatid):
     users = db.users_telegram
