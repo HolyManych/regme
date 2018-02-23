@@ -71,7 +71,7 @@ def callback_inline(call):
     if call.message:
         if call.data == "yes":
             bot.send_message(call.message.chat.id, "Вы нажали да")
-            bot.editMessageReplyMarkup(call.message.chat.id,call.message.message_id)
+            bot.editMessageReplyMarkup(call.message.chat.id,call.message.message_id - 1)
         else:
             bot.send_message(call.message.chat.id, "Вы нажали нет")
 
