@@ -66,7 +66,7 @@ def check(message):
             wr = data['stats']['p2']["winRatio"]["value"]
             if "stats" in data:
                 bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
-                if wr < 10:
+                if float(wr) < 10:
                     bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в список")
                 else:
                     bot.send_message(message.chat.id, "Ты помещен в список")
