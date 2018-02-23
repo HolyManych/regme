@@ -16,8 +16,7 @@ client = pymongo.MongoClient(config.mongourl, connectTimeoutMS=30000)
 db = client.get_database("fortnite_regme")
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
-bot.send_message(337968852, "iam ready")
-server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+
 
 
 @bot.message_handler(commands=['start', "help"])
@@ -108,3 +107,7 @@ def webhook():
     bot.remove_webhook()
     bot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
     return "CONNECTED", 200
+
+
+bot.send_message(337968852, "iam ready")
+server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
