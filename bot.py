@@ -59,16 +59,22 @@ def echo_message(message):
 @bot.message_handler(commands=['key'])
 def any_msg(message):
     keyboard = types.InlineKeyboardMarkup()
-    yesButton = types.InlineKeyboardButton(text="Да", callback_data="/test")
-    noButton = types.InlineKeyboardButton(text="Нет", callback_data="test")
+    yesButton = types.InlineKeyboardButton(text="Да", callback_data="yes")
+    noButton = types.InlineKeyboardButton(text="Нет", callback_data="no")
     keyboard.add(yesButton)
     keyboard.add(noButton)
     bot.send_message(message.chat.id, "Будешь завтра учавствовать?", reply_markup=keyboard)
 
-@bot.message_handler(commands=['test'])
-def test(message):
-    bot.send_message(message.chat.id, "its test")
-
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    # Если сообщение из чата с ботом
+    if call.message:
+        if call.data == "yes":
+            bot.send_message(message.chat.id, "Вы нажали да")
+    # Если сообщение из инлайн-режима
+    elif call.inline_message_id:
+        if call.data == "no":
+            bot.send_message(message.chat.id, "Вы нажали нет")
 """
 TEST ==============================================
 
