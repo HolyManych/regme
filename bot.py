@@ -74,6 +74,7 @@ def check(message):
             else:
                 bot.send_message(message.chat.id, "Не удалось найти такой ник")
         except Exception as e:
+            print(e)
             bot.send_message(message.chat.id, "Что-то пошло не так, попробуйте позже")
         time.sleep(2)
         lock.release()
