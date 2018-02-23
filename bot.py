@@ -61,8 +61,8 @@ def any_msg(message):
     keyboard = types.InlineKeyboardMarkup()
     yesButton = types.InlineKeyboardButton(text="Да", callback_data="yes")
     noButton = types.InlineKeyboardButton(text="Нет", callback_data="no")
-    keyboard.add(yesButton)
-    keyboard.add(noButton)
+    keyboard.add(yesButton, noButton)
+    #keyboard.add(noButton)
     bot.send_message(message.chat.id, str(message.message_id) + "Будешь завтра учавствовать?", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -70,9 +70,9 @@ def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Увидемся завтра в игре")
         else:
-            bot.send_message(call.message.chat.id, "Вы нажали нет")
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
 
 """
 TEST ==============================================
