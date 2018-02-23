@@ -59,7 +59,7 @@ def addme(message):
 
 def check(message):
     lock = threading.Lock()
-    name = message.text
+    name = message.text.lover()
     bot.send_message(message.chat.id, "Проверяю, подожди")
     if not checkPlayer(name):
         lock.acquire()
