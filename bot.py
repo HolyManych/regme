@@ -53,7 +53,7 @@ def checkme(message):
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
     isFind = users.find({"chat_id": message.chat.id}).count() == 1
     if isFind:
-        for i, user in enumerate(users.find().sort('wr', pymongo.DESCENDING):
+        for i, user in enumerate(users.find().sort('wr', pymongo.DESCENDING)):
             if user["chat_id"] == message.chat.id:
                 bot.send_message(message.chat.id, "Твое место в списке - " + str(i+1))
                 return
