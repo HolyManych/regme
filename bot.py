@@ -90,7 +90,7 @@ def checkme(message):
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
     if checkChatId(message.chat.id):
         for i, user in enumerate(users.find().sort('wr', pymongo.DESCENDING)):
-            if user["chat_id"] == message.chat.id:
+            if user["_id"] == message.chat.id:
                 bot.send_message(message.chat.id, "Твое место в списке - " + str(i+1))
                 return
     else:
@@ -125,7 +125,7 @@ def callback_inline(call):
 
 @bot.message_handler(commands=["delme"])
 def delme(message):
-    db.users.remove({"_id": message.chat.id})
+    db.users_telegram.remove({"_id": message.chat.id})
 
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
