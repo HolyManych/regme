@@ -85,7 +85,7 @@ def check(message):
         lock.release()
     else:
         bot.send_message(message.chat.id, "Такой ник уже есть среди участников. Если ты точно ввел свой ник, то напиши ему:")
-        bot.sendContact(message.chat.id, "+79995361024", "Roman")
+        bot.send_contact(message.chat.id, "+79995361024", "Roman")
 
 @bot.message_handler(commands=["chatid"])
 def chatid(message):
