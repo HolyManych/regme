@@ -70,11 +70,10 @@ def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            bot.send_message(message.chat.id, "Вы нажали да")
-    # Если сообщение из инлайн-режима
-    elif call.inline_message_id:
-        if call.data == "no":
-            bot.send_message(message.chat.id, "Вы нажали нет")
+            bot.send_message(call.message.chat.id, "Вы нажали да")
+        else:
+            bot.send_message(call.message.chat.id, "Вы нажали нет")
+
 """
 TEST ==============================================
 
