@@ -70,8 +70,7 @@ def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            bot.editMessageReplyMarkup(call.message.chat.id, call.message.message_id)
-            bot.send_message(call.message.chat.id, "Вы нажали да" + str(call.message.message_id))
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Пыщь")
         else:
             bot.send_message(call.message.chat.id, "Вы нажали нет")
 
