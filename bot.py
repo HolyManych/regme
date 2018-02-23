@@ -59,11 +59,14 @@ def echo_message(message):
 @bot.message_handler(commands=['key'])
 def any_msg(message):
     keyboard = types.InlineKeyboardMarkup()
-    callback_button = types.InlineKeyboardButton(text="Нажми меня", callback_data="test")
+    yesButton = types.InlineKeyboardButton(text="Да", callback_data="/test")
+    noButton = types.InlineKeyboardButton(text="Нет", callback_data="test")
     keyboard.add(callback_button)
     bot.send_message(message.chat.id, "Я – сообщение из обычного режима", reply_markup=keyboard)
 
-
+@bot.message_handler(commands=['test'])
+def test(message):
+    bot.send_message(message.chat.id, "its test")
 
 """
 TEST ==============================================
