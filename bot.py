@@ -61,7 +61,7 @@ def any_msg(message):
     keyboard = types.InlineKeyboardMarkup()
     yesButton = types.InlineKeyboardButton(text="Да", callback_data="/test")
     noButton = types.InlineKeyboardButton(text="Нет", callback_data="test")
-    keyboard.add(yseButton)
+    keyboard.add(yesButton)
     keyboard.add(noButton)
     bot.send_message(message.chat.id, "Будешь завтра учавствовать?", reply_markup=keyboard)
 
