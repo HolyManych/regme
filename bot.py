@@ -34,10 +34,13 @@ def checkPlayer(nick):
 
 def checkChatId(chatid):
     return db.users_telegram.find({"_id": chatid}).count() == 1
-#coll.update({"name": "Петр"}, {"surname": "Новосельцев", "age": 25})
+
+
+# Установить значение в документе
+#db.users.update({ 'name':'user 2' }, { "$set": { 'level':5 } })
 def setStatus(chatid):
     users = db.users_telegram
-    users.update({"_id": chatid}, {"status": 1})
+    users.update({"_id": chatid}, {"$set":{"status":1 }})
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
