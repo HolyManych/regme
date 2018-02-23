@@ -63,15 +63,15 @@ def any_msg(message):
     noButton = types.InlineKeyboardButton(text="Нет", callback_data="no")
     keyboard.add(yesButton)
     keyboard.add(noButton)
-    bot.send_message(message.chat.id, "Будешь завтра учавствовать?", reply_markup=keyboard)
+    bot.send_message(message.chat.id, str(message.message_id) + "Будешь завтра учавствовать?", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            bot.send_message(call.message.chat.id, "Вы нажали да")
-            bot.editMessageReplyMarkup(call.message.chat.id,call.message.message_id - 1)
+            bot.editMessageReplyMarkup(call.message.chat.id, call.message.message_id)
+            bot.send_message(call.message.chat.id, "Вы нажали да" + str(call.message.message_id))
         else:
             bot.send_message(call.message.chat.id, "Вы нажали нет")
 
