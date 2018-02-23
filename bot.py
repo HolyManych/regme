@@ -56,6 +56,19 @@ def echo_message(message):
     bot.reply_to(message, message.text)
 """
 
+@bot.message_handler(commands=['key'])
+def any_msg(message):
+    keyboard = types.InlineKeyboardMarkup()
+    callback_button = types.InlineKeyboardButton(text="Нажми меня", callback_data="test")
+    keyboard.add(callback_button)
+    bot.send_message(message.chat.id, "Я – сообщение из обычного режима", reply_markup=keyboard)
+
+
+
+"""
+TEST ==============================================
+
+"""
 @server.route("/" + config.token, methods=['POST'])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
