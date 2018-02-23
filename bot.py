@@ -43,7 +43,7 @@ def setStatus(chatid):
 def start(message):
     bot.send_message(message.chat.id, "Чтобы добавиться в подборку игроков, воспользуйся командой /addme")
     bot.send_message(message.chat.id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /checkme")
-    bot.send_message(message.chat.id, "Чтобы удалить себя из списка, воспользуйся командой /delme)
+    bot.send_message(message.chat.id, "Чтобы удалить себя из списка, воспользуйся командой /delme")
 
 @bot.message_handler(commands=["addme"])
 def addme(message):
