@@ -66,8 +66,8 @@ def check(message):
         try:
             r = requests.get(config.urlbase + name, headers=config.header)
             data = json.loads(r.text)
-            wr = data['stats']['p2']["winRatio"]["value"]
             if "stats" in data:
+                wr = data['stats']['p2']["winRatio"]["value"]
                 bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
                 if float(wr) < 10:
                     bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в список")
