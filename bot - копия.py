@@ -1,11 +1,11 @@
 import config
+import random
 import telebot
 import requests
-import random
 import googlemaps
 from lxml import html
-from telebot import types
 from saver import Saver
+from telebot import types
 
 bot = telebot.TeleBot(config.token)
 gmaps = googlemaps.Client(key=config.goole_api)
