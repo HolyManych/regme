@@ -40,11 +40,12 @@ def setStatus(chatid):
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
-    bot.send_message(message.chat.id, "Чтобы добавиться в подборку игроков, воспользуйся командой /addme")
-    bot.send_message(message.chat.id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /checkme")
-    bot.send_message(message.chat.id, "Чтобы удалить себя из списка, воспользуйся командой /delme")
+    bot.send_message(message.chat.id, "Чтобы добавиться в подборку игроков, воспользуйся командой /add")
+    bot.send_message(message.chat.id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /check")
+    bot.send_message(message.chat.id, "Если твой WinRate изменился, то воспользуйся командой /update")
+    bot.send_message(message.chat.id, "Чтобы удалить себя из списка, воспользуйся командой /del")
 
-@bot.message_handler(commands=["addme"])
+@bot.message_handler(commands=["add"])
 def addme(message):
     if not checkChatId(message.chat.id):
         sent = bot.send_message(message.chat.id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
@@ -58,7 +59,7 @@ def check(message):
     name = message.text
     name = name.lower()
     name = name.strip()
-    bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.")
+    bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
     if not checkPlayer(name):
         lock.acquire()
         try:
@@ -89,7 +90,7 @@ def check(message):
 def chatid(message):
     bot.send_message(message.chat.id, "Its your chatid: " + str(message.chat.id))
 
-@bot.message_handler(commands=["checkme"])
+@bot.message_handler(commands=["check"])
 def checkme(message):
     users = db.users_telegram
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
@@ -107,8 +108,8 @@ def any_msg(message):
         bot.send_message(message.chat.id, "Ты не администратор")
         return
     keyboard = types.InlineKeyboardMarkup()
-    yesButton = types.InlineKeyboardButton(text="✅  Да, порву всех", callback_data="yes")
-    noButton = types.InlineKeyboardButton(text="✖  Нет, у меня лапки", callback_data="no")
+    yesButton = types.InlineKeyboardButton(text="✅  Да, порву всех  ☠", callback_data="yes")
+    noButton = types.InlineKeyboardButton(text="✖  Нет, у меня лапки  ", callback_data="no")
     keyboard.add(yesButton)
     keyboard.add(noButton)
     #players = []
@@ -133,7 +134,7 @@ def getcount(message):
     count = db.users_telegram.count()
     bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
-@bot.message_handler(commands=["delme"])
+@bot.message_handler(commands=["del"])
 def delme(message):
     try:
         db.users_telegram.remove({"_id": message.chat.id})
