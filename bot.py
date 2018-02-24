@@ -51,36 +51,38 @@ def addme(message):
         bot.register_next_step_handler(sent, check)
     else:
         bot.send_message(message.chat.id, "Ты уже присутствуешь в списке")
-        bot.send_message(message.chat.id, "Ты можешь удалить себя с помошью команды /delme")
+        bot.send_message(message.chat.id, "Ты можешь удалить себя из списка с помошью команды /delme")
 
 def check(message):
     lock = threading.Lock()
     name = message.text
     name = name.lower()
     name = name.strip()
-    bot.send_message(message.chat.id, "Проверяю, подожди")
+    bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.")
     if not checkPlayer(name):
         lock.acquire()
         try:
+            #DEBUG Проверка на частоту запросов
+            print("Last request in", time.time())
             r = requests.get(config.urlbase + name, headers=config.header)
             data = json.loads(r.text)
             if "stats" in data:
                 wr = data['stats']['p2']["winRatio"]["value"]
                 bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
                 if float(wr) < 10:
-                    bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в список")
+                    bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в конец списка")
                 else:
-                    bot.send_message(message.chat.id, "Ты помещен в список")
+                    bot.send_message(message.chat.id, "Ты помещен(а) в список")
                 pushPlayer(message.chat.id, name, wr)
             else:
                 bot.send_message(message.chat.id, "Не удалось найти такой ник")
         except Exception as e:
             print(e)
-            bot.send_message(message.chat.id, "Что-то пошло не так, попробуйте позже")
+            bot.send_message(message.chat.id, "Что-то пошло не так, попробуй позже")
         time.sleep(2)
         lock.release()
     else:
-        bot.send_message(message.chat.id, "Такой ник уже есть среди участников. Если ты точно ввел свой ник, то напиши ему:")
+        bot.send_message(message.chat.id, "Такой ник уже есть среди участников. Если ты точно ввел(а) свой ник, то напиши ему:")
         bot.send_contact(message.chat.id, "+79995361024", "Roman")
 
 @bot.message_handler(commands=["chatid"])
@@ -101,39 +103,44 @@ def checkme(message):
 
 @bot.message_handler(commands=["status"])
 def any_msg(message):
-    if checkAdmin(message.chat.id):
-        keyboard = types.InlineKeyboardMarkup()
-        yesButton = types.InlineKeyboardButton(text="Да, порву всех", callback_data="yes")
-        noButton = types.InlineKeyboardButton(text="Нет, у меня лапки", callback_data="no")
-        keyboard.add(yesButton, noButton)
-        #players = []
-        users = db.users_telegram
-        for user in users.find().sort("wr", pymongo.DESCENDING).limit(99):
-            #players.append(user["_id"])
-            bot.send_message(user["_id"], "Будешь завтра учавствовать в турнире?", reply_markup=keyboard)
+    if not checkAdmin(message.chat.id):
+        bot.send_message(message.chat.id, "Ты не администратор")
+        return
+    keyboard = types.InlineKeyboardMarkup()
+    yesButton = types.InlineKeyboardButton(text="✅  Да, порву всех", callback_data="yes")
+    noButton = types.InlineKeyboardButton(text="✖  Нет, у меня лапки", callback_data="no")
+    keyboard.add(yesButton)
+    keyboard.add(noButton)
+    #players = []
+    users = db.users_telegram
+    for user in users.find().sort("wr", pymongo.DESCENDING).limit(99):
+        #players.append(user["_id"])
+        bot.send_message(user["_id"], "Будешь завтра учавствовать в турнире?", reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            #TODO
-            #set status YES
             setStatus(call.message.chat.id)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Увидемся завтра в игре. Перед игрой я тебе скину ключ")
         else:
-            #TODO
-            #set status NO
+            #TODO Надо отправлять новые приглашения
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
 
 @bot.message_handler(commands=["getcount"])
 def getcount(message):
     count = db.users_telegram.count()
-    bot.send_message(message.chat.id, count)
+    bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
 @bot.message_handler(commands=["delme"])
 def delme(message):
-    db.users_telegram.remove({"_id": message.chat.id})
+    try:
+        db.users_telegram.remove({"_id": message.chat.id})
+        bot.send_message(message.chat.id, "Тебя больше нет в списке")
+    except Exception as e:
+        bot.send_message(message.chat.id, "Что-то пошло не так")
+        print("Error on deleting", e)
 
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
