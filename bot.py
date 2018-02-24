@@ -35,12 +35,8 @@ def checkPlayer(nick):
 def checkChatId(chatid):
     return db.users_telegram.find({"_id": chatid}).count() == 1
 
-
-# Установить значение в документе
-#db.users.update({ 'name':'user 2' }, { "$set": { 'level':5 } })
 def setStatus(chatid):
-    users = db.users_telegram
-    users.update({"_id": chatid}, {"$set":{"status":1 }})
+    db.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
@@ -107,8 +103,8 @@ def checkme(message):
 def any_msg(message):
     if checkAdmin(message.chat.id):
         keyboard = types.InlineKeyboardMarkup()
-        yesButton = types.InlineKeyboardButton(text="Да", callback_data="yes")
-        noButton = types.InlineKeyboardButton(text="Нет", callback_data="no")
+        yesButton = types.InlineKeyboardButton(text="Да, порву всех", callback_data="yes")
+        noButton = types.InlineKeyboardButton(text="Нет, у меня лапки", callback_data="no")
         keyboard.add(yesButton, noButton)
         #players = []
         users = db.users_telegram
@@ -129,6 +125,10 @@ def callback_inline(call):
             #TODO
             #set status NO
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
+
+@bot.message_handler(commands=["getcount"])
+def getcount():
+    db.users_telegram.count()
 
 @bot.message_handler(commands=["delme"])
 def delme(message):
