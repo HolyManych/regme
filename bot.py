@@ -127,8 +127,9 @@ def callback_inline(call):
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
 
 @bot.message_handler(commands=["getcount"])
-def getcount():
-    db.users_telegram.count()
+def getcount(message):
+    count = db.users_telegram.count()
+    bot.send_message(message.chat.id, count)
 
 @bot.message_handler(commands=["delme"])
 def delme(message):
