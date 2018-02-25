@@ -45,13 +45,14 @@ class DataBase:
         self.dbf.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
 
 
+
 class OutMode(Enum):
     ADMIN  = 1
     ALL    = 2
     IGNORE = 3
 
 
-db = DataBase
+db = DataBase()
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
 lock1 = threading.Lock()
@@ -77,17 +78,17 @@ def start_help(message):
         bot.send_message(chat_id, "/{} -- {}".format(func.name, func.descr))
 
 """
-
-2018-02-25T15:52:16.725588+00:00 app[web.1]: 10.124.30.221 - - [25/Feb/2018 15:52:16] "POST /468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE HTTP/1.1" 200 -
-2018-02-25T15:52:16.726884+00:00 app[web.1]: 2018-02-25 15:52:16,726 (util.py:64 WorkerThread2) ERROR - TeleBot: "TypeError occurred, args=("checkChatId() missing 1 required positional argument: 'chatid'",)
-
-2018-02-25T15:52:16.726887+00:00 app[web.1]: Traceback (most recent call last):
-2018-02-25T15:52:16.726889+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.6/site-packages/telebot/util.py", line 58, in run
-2018-02-25T15:52:16.726890+00:00 app[web.1]:     task(*args, **kwargs)
-2018-02-25T15:52:16.726891+00:00 app[web.1]:   File "bot.py", line 94, in addme
-2018-02-25T15:52:16.726892+00:00 app[web.1]:     if not db.checkChatId(message.chat.id):
-2018-02-25T15:52:16.726893+00:00 app[web.1]: TypeError: checkChatId() missing 1 required positional argument: 'chatid'
-2018-02-25T15:52:16.726895+00:00 app[web.1]: "
+2018-02-25T16:57:48.896211+00:00 app[web.1]:  * Running on http://0.0.0.0:52838/ (Press CTRL+C to quit)
+2018-02-25T16:57:52.447121+00:00 app[web.1]: 10.99.40.4 - - [25/Feb/2018 16:57:52] "POST /468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE HTTP/1.1" 200 -
+2018-02-25T16:57:52.447953+00:00 app[web.1]: addme>> chat_id = 337968852
+2018-02-25T16:57:52.449127+00:00 app[web.1]: 2018-02-25 16:57:52,448 (util.py:64 WorkerThread1) ERROR - TeleBot: "TypeError occurred, args=("checkChatId() missing 1 required positional argument: 'chatid'",)
+2018-02-25T16:57:52.449131+00:00 app[web.1]: Traceback (most recent call last):
+2018-02-25T16:57:52.449134+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.6/site-packages/telebot/util.py", line 58, in run
+2018-02-25T16:57:52.449136+00:00 app[web.1]:     task(*args, **kwargs)
+2018-02-25T16:57:52.449137+00:00 app[web.1]:   File "bot.py", line 98, in addme
+2018-02-25T16:57:52.449139+00:00 app[web.1]:     if not db.checkChatId(chat_id):
+2018-02-25T16:57:52.449141+00:00 app[web.1]: TypeError: checkChatId() missing 1 required positional argument: 'chatid'
+2018-02-25T16:57:52.449732+00:00 app[web.1]: "
 """
 
 
@@ -113,10 +114,6 @@ def check(message):
         lock.acquire()
         try:
             #DEBUG Проверка на частоту запросов
-            #TODO:
-            # from datetime import datetime
-            # cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-            # string: "2018-02-25 18:07:48.029587"
             #TODO запись этого в db.logs
             cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
             print("Last request in [{0}]".format(cur_time))
