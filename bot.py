@@ -8,6 +8,7 @@ import telebot
 import pymongo
 import requests
 import threading
+from enum import Enum
 from lxml import html
 from telebot import types
 from datetime import datetime
@@ -22,7 +23,7 @@ from flask import Flask, request
 class DataBase:
     def __init__(self):
         client = pymongo.MongoClient(config.mongourl, connectTimeoutMS=30000)
-        self.db = client.get_database("fortnite_regme")
+        self.dbf = client.get_database("fortnite_regme")
 
     def pushPlayer(self, chatid, nick, wr):
         record = {
@@ -31,19 +32,26 @@ class DataBase:
             "wr": wr,
             "status": 0
         }
-        self.db.users_telegram.insert_one(record)
+        self.dbf.users_telegram.insert_one(record)
+
+    def getUsers(self):
+        return self.dbf.users_telegram
 
     def checkAdmin(self, chat_id):
-        return self.db.admins.find({"_id": chat_id}).count() == 1
+        return self.dbf.admins.find({"_id": chat_id}).count() == 1
 
     def checkPlayer(self, nick):
-        return self.db.users_telegram.find({"fortnite_name": nick}).count() == 1
+        return self.dbf.users_telegram.find({"fortnite_name": nick}).count() == 1
 
     def checkChatId(self, chatid):
-        return self.db.users_telegram.find({"_id": chatid}).count() == 1
+        return self.dbf.users_telegram.find({"_id": chatid}).count() == 1
 
     def setStatus(self, chatid):
-        self.db.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
+        self.dbf.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
+
+
+class OutMode(Enum):
+    FIRST = 1
 
 
 
@@ -65,7 +73,14 @@ def start_help(message):
     #   getcount
     #   delme
     func_list = [
-        {name: "start", mode: "", descr: ""},
+        {name: "start",    mode: "start", descr: ""},
+        {name: "help",     mode: "all", descr: ""},
+        {name: "addme",    mode: "start", descr: ""},
+        {name: "chatid",   mode: "start", descr: ""},
+        {name: "checkme",  mode: "start", descr: ""},
+        {name: "status",   mode: "start", descr: ""},
+        {name: "getcount", mode: "start", descr: ""},
+        {name: "delme",    mode: "start", descr: ""},
     ]
     #TODO: differnt help for admin and user
     #TODO для админов расширенную функцию
@@ -132,7 +147,7 @@ def chatid(message):
 
 @bot.message_handler(commands=["checkme"])
 def checkme(message):
-    users = db.users_telegram
+    users = db.getUsers
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
     if db.checkChatId(message.chat.id):
         for i, user in enumerate(users.find().sort('wr', pymongo.DESCENDING)):
@@ -155,7 +170,7 @@ def any_msg(message):
     keyboard.add(yesButton)
     keyboard.add(noButton)
     #players = []
-    users = db.users_telegram
+    users = db.getUsers
     for user in users.find().sort("wr", pymongo.DESCENDING).limit(99):
         #players.append(user["_id"])
         bot.send_message(user["_id"], "Будешь завтра учавствовать в турнире?", reply_markup=keyboard)
@@ -173,13 +188,14 @@ def callback_inline(call):
 
 @bot.message_handler(commands=["getcount"])
 def getcount(message):
-    count = db.users_telegram.count()
+    users = db.getUsers
+    count = users.count()
     bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
 @bot.message_handler(commands=["delme"])
 def delme(message):
     try:
-        db.users_telegram.remove({"_id": message.chat.id})
+        db.dbf.users_telegram.remove({"_id": message.chat.id})
         bot.send_message(message.chat.id, "Тебя больше нет в списке")
     except Exception as e:
         bot.send_message(message.chat.id, "Что-то пошло не так")
