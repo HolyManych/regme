@@ -8,13 +8,14 @@ import telebot
 import pymongo
 import requests
 import threading
-from enum import Enum
 from lxml import html
 from telebot import types
 from datetime import datetime
 from flask import Flask, request
 
-
+##############################################################################
+# DataBase class
+##############################################################################
 class DataBase:
     def __init__(self):
         client = pymongo.MongoClient(config.mongourl, connectTimeoutMS=30000)
@@ -45,53 +46,63 @@ class DataBase:
         self.dbf.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
 
 
+##############################################################################
+# Command class
+##############################################################################
+class Cmd:
+    class Id:
+        start      = 1
+        help       = 2
+        checkme    = 3
+        chatid     = 4
+        addme      = 5
+        delme      = 6
+        status     = 7
+        getcount   = 8
 
-class OutMode(Enum):
-    ADMIN  = 1
-    ALL    = 2
-    IGNORE = 3
+    class Mode:
+        ANY    = 0
+        ADMIN  = 1
+        IGNORE = 2
 
+    def __init__(self, name, mode, description):
+        self.name = name
+        self.mode = mode
+        self.descr = description
+
+##############################################################################
+# global variables
+##############################################################################
+cmds = {
+    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY, "call for start bot"),
+    Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY, "print help messages"),
+    Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY, "check ur existed in queue"),
+    Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY, "print ur chat id"),
+    Cmd.Id.addme:    Cmd("addme",    Cmd.Mode.ANY, "add ur nickname in queue"),
+    Cmd.Id.delme:    Cmd("delme",    Cmd.Mode.ANY, "delete ur last nickname"),
+    Cmd.Id.status:   Cmd("status",   Cmd.Mode.ADMIN, "developing..."),
+    Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY, "print count of users in queue"),
+}
 
 db = DataBase()
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
 lock1 = threading.Lock()
-"""
-2018-02-25T17:40:55.119582+00:00 app[web.1]: 10.98.35.37 - - [25/Feb/2018 17:40:55] "POST /468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE HTTP/1.1" 200 -
-2018-02-25T17:40:55.120286+00:00 app[web.1]: 2018-02-25 17:40:55,120 (util.py:64 WorkerThread1) ERROR - TeleBot: "NameError occurred, args=("name 'name' is not defined",)
-2018-02-25T17:40:55.120289+00:00 app[web.1]: Traceback (most recent call last):
-2018-02-25T17:40:55.120291+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.6/site-packages/telebot/util.py", line 58, in run
-2018-02-25T17:40:55.120293+00:00 app[web.1]:     task(*args, **kwargs)
-2018-02-25T17:40:55.120294+00:00 app[web.1]:   File "bot.py", line 64, in start_help
-2018-02-25T17:40:55.120296+00:00 app[web.1]:     {name: "start",    mode: OutMode.IGNORE, descr: "no description"},
-2018-02-25T17:40:55.120297+00:00 app[web.1]: NameError: name 'name' is not defined
-2018-02-25T17:40:55.120299+00:00 app[web.1]: "
-"""
 
-
-@bot.message_handler(commands=["start", "help"])
+##############################################################################
+# handlers
+##############################################################################
+@bot.message_handler(commands=[cmd[Cmd.Id.start].name, cmd[Cmd.Id.help].name])
 def start_help(message):
-    func_list = [
-        {"name": "start",    "mode": OutMode.IGNORE, "descr": "no description"},
-        {"name": "help",     "mode": OutMode.ALL,    "descr": "вывести все доступные команды"},
-        {"name": "addme",    "mode": OutMode.ALL,    "descr": "добавиться в подборку игроков"},
-        {"name": "chatid",   "mode": OutMode.ALL,    "descr": "узнать свой chat-id"},
-        {"name": "checkme",  "mode": OutMode.ALL,    "descr": "проверить свое место в списке зарегистрировавшихся участников"},
-        {"name": "status",   "mode": OutMode.ADMIN,  "descr": "no description"},
-        {"name": "getcount", "mode": OutMode.ALL,    "descr": "узнать количество зарегистрировавшихся"},
-        {"name": "delme",    "mode": OutMode.ALL,    "descr": "удалить себя из списка"},
-    ]
     chat_id = message.chat.id
-    isAdm = db.checkAdmin(chat_id)
-    for func in func_list:
-        if OutMode.IGNORE == func["mode"]: continue
-        if OutMode.ADMIN == func["mode"] and not isAdm: continue
-        bot.send_message(chat_id, "/{} -- {}".format(func["name"], func["descr"]))
+    isAdmin = db.checkAdmin(chat_id)
+    for val in sorted(cmds.values(), key=lambda cmd: cmd.name):
+        if val.mode == Cmd.Mode.IGNORE: continue
+        if val.mode == Cmd.Mode.ADMIN and not isAdmin: continue
+        bot.send_message(chat_id, "/{0} -- {1}".format(val.name, val.descr))
 
 
-
-
-@bot.message_handler(commands=["addme"])
+@bot.message_handler(commands=[cmd[Cmd.Id.addme].name])
 def addme(message):
     chat_id = message.chat.id
     if not db.checkChatId(chat_id):
@@ -99,7 +110,7 @@ def addme(message):
         bot.register_next_step_handler(sent, check)
     else:
         bot.send_message(chat_id, "Ты уже присутствуешь в списке")
-        bot.send_message(chat_id, "Ты можешь удалить себя из списка с помошью команды /del")
+        bot.send_message(chat_id, "Ты можешь удалить себя из списка с помошью команды /{}".format(cmd[Cmd.Id.delme].name))
 
 def check(message):
     bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
@@ -130,19 +141,21 @@ def check(message):
             else:
                 bot.send_message(message.chat.id, "Не удалось найти такой ник")
         except Exception as e:
-            print("check>> Exception:" + str(e))
+            print("DEBUG: check: Exception:" + str(e))
             bot.send_message(message.chat.id, "Что-то пошло не так, попробуй позже")
         time.sleep(2)
         lock.release()
     else:
         bot.send_message(message.chat.id, "Такой ник уже есть среди участников. Если ты точно ввел(а) свой ник, то напиши ему:")
-        bot.send_contact(message.chat.id, "+79995361024", "Roman")
+        bot.send_contact(message.chat.id, config.AboutSelf.mtel, config.AboutSelf.name)
 
-@bot.message_handler(commands=["chatid"])
+
+@bot.message_handler(commands=[cmd[Cmd.Id.chatid].name])
 def chatid(message):
     bot.send_message(message.chat.id, "Its your chatid: " + str(message.chat.id))
 
-@bot.message_handler(commands=["checkme"])
+
+@bot.message_handler(commands=[cmd[Cmd.Id.checkme].name])
 def checkme(message):
     users = db.getUsers()
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
@@ -152,10 +165,10 @@ def checkme(message):
                 bot.send_message(message.chat.id, "Твое место в списке - " + str(i+1))
                 return
     else:
-        bot.send_message(message.chat.id, "Тебя нет в списке. Воспользуйся командой /add")
+        bot.send_message(message.chat.id, "Тебя нет в списке. Воспользуйся командой /{}".format(cmd[Cmd.Id.addme].name))
 
 
-@bot.message_handler(commands=["status"])
+@bot.message_handler(commands=[cmd[Cmd.Id.status].name])
 def any_msg(message):
     #TODO: check duplicate answer yes/no
     if not db.checkAdmin(message.chat.id):
@@ -183,13 +196,13 @@ def callback_inline(call):
             #TODO Надо отправлять новые приглашения
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
 
-@bot.message_handler(commands=["getcount"])
+@bot.message_handler(commands=[cmd[Cmd.Id.getcount].name])
 def getcount(message):
     users = db.getUsers()
     count = users.count()
     bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
-@bot.message_handler(commands=["delme"])
+@bot.message_handler(commands=[cmd[Cmd.Id.delme].name])
 def delme(message):
     try:
         db.dbf.users_telegram.remove({"_id": message.chat.id})
@@ -235,6 +248,8 @@ def webhook():
     bot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
     return ("CONNECTED", 200)
 
-
+##############################################################################
+# main execution
+##############################################################################
 bot.send_message(config.AboutSelf.chat_id, config.AboutSelf.getHelloMsg())
 server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
