@@ -14,11 +14,6 @@ from telebot import types
 from datetime import datetime
 from flask import Flask, request
 
-#TODO: write command to FatherBot
-# addme
-# delme
-# checkme
-#
 
 class DataBase:
     def __init__(self):
@@ -51,10 +46,10 @@ class DataBase:
 
 
 class OutMode(Enum):
-    FIRST = 1
-    ADMIN = 2
-    USER  = 3
-    ALL   = 4
+    ADMIN  = 1
+    ALL    = 2
+    IGNORE = 3
+
 
 db = DataBase
 bot = telebot.TeleBot(config.token)
@@ -64,31 +59,22 @@ lock1 = threading.Lock()
 
 @bot.message_handler(commands=["start", "help"])
 def start_help(message):
-    # Available commands:
-    #   start
-    #   help
-    #   addme
-    #   chatid
-    #   checkme
-    #   status
-    #   getcount
-    #   delme
     func_list = [
-        {name: "start",    mode: OutMode.FIRST, descr: ""},
-        {name: "help",     mode: OutMode.ALL,   descr: ""},
-        {name: "addme",    mode: OutMode.USER, descr: ""},
-        {name: "chatid",   mode: OutMode.ALL, descr: ""},
-        {name: "checkme",  mode: OutMode.USER, descr: ""},
-        {name: "status",   mode: OutMode., descr: ""},
-        {name: "getcount", mode: OutMode., descr: ""},
-        {name: "delme",    mode: OutMode., descr: ""},
+        {name: "start",    mode: OutMode.IGNORE, descr: "no description"},
+        {name: "help",     mode: OutMode.ALL,    descr: "вывести все доступные команды"},
+        {name: "addme",    mode: OutMode.ALL,    descr: "добавиться в подборку игроков"},
+        {name: "chatid",   mode: OutMode.ALL,    descr: "узнать свой chat-id"},
+        {name: "checkme",  mode: OutMode.ALL,    descr: "проверить свое место в списке зарегистрировавшихся участников"},
+        {name: "status",   mode: OutMode.ADMIN,  descr: "no description"},
+        {name: "getcount", mode: OutMode.ALL,    descr: "узнать количество зарегистрировавшихся"},
+        {name: "delme",    mode: OutMode.ALL,    descr: "удалить себя из списка"},
     ]
-    #TODO: differnt help for admin and user
-    #TODO для админов расширенную функцию
-    send_id = message.chat.id
-    bot.send_message(send_id, "Чтобы добавиться в подборку игроков, воспользуйся командой /add")
-    bot.send_message(send_id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /check")
-    bot.send_message(send_id, "Чтобы удалить себя из списка, воспользуйся командой /del")
+    chat_id = message.chat.id
+    isAdm = db.checkAdmin(chat_id)
+    for func in func_list:
+        if OutMode.IGNORE == func.mode: continue
+        if OutMode.ADMIN == func.mode and not isAdm: continue
+        bot.send_message(chat_id, "/{} -- {}".format(func.name, func.descr))
 
 """
 
@@ -108,6 +94,7 @@ def start_help(message):
 @bot.message_handler(commands=["addme"])
 def addme(message):
     chat_id = message.chat.id
+    print("addme>> chat_id =", chat_id)
     if not db.checkChatId(chat_id):
         sent = bot.send_message(chat_id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
         bot.register_next_step_handler(sent, check)
@@ -164,7 +151,7 @@ def chatid(message):
 
 @bot.message_handler(commands=["checkme"])
 def checkme(message):
-    users = db.getUsers
+    users = db.getUsers()
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
     if db.checkChatId(message.chat.id):
         for i, user in enumerate(users.find().sort('wr', pymongo.DESCENDING)):
@@ -187,7 +174,7 @@ def any_msg(message):
     keyboard.add(yesButton)
     keyboard.add(noButton)
     #players = []
-    users = db.getUsers
+    users = db.getUsers()
     for user in users.find().sort("wr", pymongo.DESCENDING).limit(99):
         #players.append(user["_id"])
         bot.send_message(user["_id"], "Будешь завтра учавствовать в турнире?", reply_markup=keyboard)
@@ -205,7 +192,7 @@ def callback_inline(call):
 
 @bot.message_handler(commands=["getcount"])
 def getcount(message):
-    users = db.getUsers
+    users = db.getUsers()
     count = users.count()
     bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
