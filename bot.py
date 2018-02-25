@@ -10,6 +10,7 @@ import requests
 import threading
 from lxml import html
 from telebot import types
+from datetime import datetime
 from flask import Flask, request
 
 #TODO: write command to FatherBot
@@ -18,48 +19,42 @@ from flask import Flask, request
 # checkme
 #
 
-#TODO: add to config
-# 1. name
-# 2. mobile number
-# 3. chat.id
-# 4. email
-# 5. lowest_winrate = 10.0 #like float number
-
-
 class DataBase:
     def __init__(self):
-        pass
+        client = pymongo.MongoClient(config.mongourl, connectTimeoutMS=30000)
+        self.db = client.get_database("fortnite_regme")
+
+    def pushPlayer(self, chatid, nick, wr):
+        record = {
+            "_id": chatid,
+            "fortnite_name": nick,
+            "wr": wr,
+            "status": 0
+        }
+        self.db.users_telegram.insert_one(record)
+
+    def checkAdmin(self, chat_id):
+        return self.db.admins.find({"_id": chat_id}).count() == 1
+
+    def checkPlayer(self, nick):
+        return self.db.users_telegram.find({"fortnite_name": nick}).count() == 1
+
+    def checkChatId(self, chatid):
+        return self.db.users_telegram.find({"_id": chatid}).count() == 1
+
+    def setStatus(self, chatid):
+        self.db.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
 
 
-client = pymongo.MongoClient(config.mongourl, connectTimeoutMS=30000)
-db = client.get_database("fortnite_regme")
 
+db = DataBase
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
 
-def pushPlayer(chatid, nick, wr):
-    record = {
-        "_id": chatid,
-        "fortnite_name": nick,
-        "wr": wr,
-        "status": 0
-    }
-    db.users_telegram.insert_one(record)
-
-def checkAdmin(chat_id):
-    return db.admins.find({"_id": chat_id}).count() == 1
-
-def checkPlayer(nick):
-    return db.users_telegram.find({"fortnite_name": nick}).count() == 1
-
-def checkChatId(chatid):
-    return db.users_telegram.find({"_id": chatid}).count() == 1
-
-def setStatus(chatid):
-    db.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
+    #TODO: differnt help for admin and user
     #TODO для админов расширенную функцию
     send_id = message.chat.id
     bot.send_message(send_id, "Чтобы добавиться в подборку игроков, воспользуйся командой /add")
@@ -68,7 +63,7 @@ def start(message):
 
 @bot.message_handler(commands=["addme"])
 def addme(message):
-    if not checkChatId(message.chat.id):
+    if not db.checkChatId(message.chat.id):
         sent = bot.send_message(message.chat.id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
         bot.register_next_step_handler(sent, check)
     else:
@@ -76,16 +71,23 @@ def addme(message):
         bot.send_message(message.chat.id, "Ты можешь удалить себя из списка с помошью команды /del")
 
 def check(message):
+
     bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
     lock = threading.Lock()
     name = message.text
     name = name.lower()
     name = name.strip()
-    if not checkPlayer(name):
+    if not db.checkPlayer(name):
         lock.acquire()
         try:
             #DEBUG Проверка на частоту запросов
-            print("Last request in", time.gmtime(time.time()))
+            #TODO:
+            # from datetime import datetime
+            # cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            # string: "2018-02-25 18:07:48.029587"
+            #TODO запись этого в db.logs
+            cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            print("Last request in [{0}]".format(cur_time))
             r = requests.get(config.urlbase + name, headers=config.header)
             data = json.loads(r.text)
             if "stats" in data:
@@ -94,12 +96,12 @@ def check(message):
                 else:
                     wr = data["stats"]["p2"]["winRatio"]["value"]
                     bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
-                    #TODO: get 10 from config.lower_winrate
-                    if float(wr) < 10.0:
+                    #TODO: get 10 from config.lowest_winrate
+                    if float(wr) < config.FortniteParam.lowest_winrate:
                         bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в конец списка")
                     else:
                         bot.send_message(message.chat.id, "Ты помещен(а) в список")
-                    pushPlayer(message.chat.id, name, wr)
+                    db.pushPlayer(message.chat.id, name, wr)
             else:
                 bot.send_message(message.chat.id, "Не удалось найти такой ник")
         except Exception as e:
@@ -119,7 +121,7 @@ def chatid(message):
 def checkme(message):
     users = db.users_telegram
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
-    if checkChatId(message.chat.id):
+    if db.checkChatId(message.chat.id):
         for i, user in enumerate(users.find().sort('wr', pymongo.DESCENDING)):
             if user["_id"] == message.chat.id:
                 bot.send_message(message.chat.id, "Твое место в списке - " + str(i+1))
@@ -131,7 +133,7 @@ def checkme(message):
 @bot.message_handler(commands=["status"])
 def any_msg(message):
     #TODO: check duplicate answer yes/no
-    if not checkAdmin(message.chat.id):
+    if not db.checkAdmin(message.chat.id):
         bot.send_message(message.chat.id, "Ты не администратор")
         return
     keyboard = types.InlineKeyboardMarkup()
@@ -150,7 +152,7 @@ def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            setStatus(call.message.chat.id)
+            db.setStatus(call.message.chat.id)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Увидемся завтра в игре. Перед игрой я тебе скину ключ")
         else:
             #TODO Надо отправлять новые приглашения
@@ -177,6 +179,20 @@ def reset(message):
         return
 """
 
+
+@bot.message_handler(commands=["threadtest"])
+def threadtest(message):
+    lock = threading.Lock()
+    bot.send_message(message.chat.id, "Hi before lock")
+    #блокировка
+    lock.acquire()
+    cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    bot.send_message(message.chat.id, "Last request in [{0}]".format(cur_time))
+    bot.send_message(message.chat.id, "Hi from lock")
+    time.sleep(30)
+    lock.release()
+
+
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
@@ -189,5 +205,6 @@ def webhook():
     return ("CONNECTED", 200)
 
 
-bot.send_message(337968852, "iam ready")
+#bot.send_message(337968852, "iam ready")
+bot.send_message(config.AboutSelf.chat_id, config.AboutSelf.getHelloMsg())
 server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
