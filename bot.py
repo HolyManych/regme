@@ -50,10 +50,23 @@ class DataBase:
 db = DataBase
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
+lock1 = threading.Lock()
 
 
 @bot.message_handler(commands=["start", "help"])
-def start(message):
+def start_help(message):
+    # Available commands:
+    #   start
+    #   help
+    #   addme
+    #   chatid
+    #   checkme
+    #   status
+    #   getcount
+    #   delme
+    func_list = [
+        {name: "start", mode: "", descr: ""},
+    ]
     #TODO: differnt help for admin and user
     #TODO для админов расширенную функцию
     send_id = message.chat.id
@@ -182,15 +195,15 @@ def reset(message):
 
 @bot.message_handler(commands=["threadtest"])
 def threadtest(message):
-    lock = threading.Lock()
     bot.send_message(message.chat.id, "Hi before lock")
     #блокировка
-    lock.acquire()
+    lock1.acquire()
     cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     bot.send_message(message.chat.id, "Last request in [{0}]".format(cur_time))
     bot.send_message(message.chat.id, "Hi from lock")
     time.sleep(30)
-    lock.release()
+    lock1.release()
+    bot.send_message(message.chat.id, "Hi after lock")
 
 
 @server.route("/" + config.token, methods=["POST"])
@@ -205,6 +218,5 @@ def webhook():
     return ("CONNECTED", 200)
 
 
-#bot.send_message(337968852, "iam ready")
 bot.send_message(config.AboutSelf.chat_id, config.AboutSelf.getHelloMsg())
 server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
