@@ -95,7 +95,6 @@ def start_help(message):
 @bot.message_handler(commands=["addme"])
 def addme(message):
     chat_id = message.chat.id
-    print("addme>> chat_id =", chat_id)
     if not db.checkChatId(chat_id):
         sent = bot.send_message(chat_id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
         bot.register_next_step_handler(sent, check)
@@ -218,7 +217,13 @@ def threadtest(message):
     cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     bot.send_message(message.chat.id, "Last request in [{0}]".format(cur_time))
     bot.send_message(message.chat.id, "Hi from lock")
-    time.sleep(30)
+    delay = 30
+    every = 5
+    cur_time = 0
+    while cur_time < delay:
+        bot.send_message(message.chat.id, "I am alive. Wait {} sec".format(delay - cur_time))
+        cur_time += every
+        time.sleep(every)
     lock1.release()
     bot.send_message(message.chat.id, "Hi after lock")
 
