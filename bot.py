@@ -56,40 +56,39 @@ db = DataBase()
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
 lock1 = threading.Lock()
+"""
+2018-02-25T17:40:55.119582+00:00 app[web.1]: 10.98.35.37 - - [25/Feb/2018 17:40:55] "POST /468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE HTTP/1.1" 200 -
+2018-02-25T17:40:55.120286+00:00 app[web.1]: 2018-02-25 17:40:55,120 (util.py:64 WorkerThread1) ERROR - TeleBot: "NameError occurred, args=("name 'name' is not defined",)
+2018-02-25T17:40:55.120289+00:00 app[web.1]: Traceback (most recent call last):
+2018-02-25T17:40:55.120291+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.6/site-packages/telebot/util.py", line 58, in run
+2018-02-25T17:40:55.120293+00:00 app[web.1]:     task(*args, **kwargs)
+2018-02-25T17:40:55.120294+00:00 app[web.1]:   File "bot.py", line 64, in start_help
+2018-02-25T17:40:55.120296+00:00 app[web.1]:     {name: "start",    mode: OutMode.IGNORE, descr: "no description"},
+2018-02-25T17:40:55.120297+00:00 app[web.1]: NameError: name 'name' is not defined
+2018-02-25T17:40:55.120299+00:00 app[web.1]: "
+"""
 
 
 @bot.message_handler(commands=["start", "help"])
 def start_help(message):
     func_list = [
-        {name: "start",    mode: OutMode.IGNORE, descr: "no description"},
-        {name: "help",     mode: OutMode.ALL,    descr: "вывести все доступные команды"},
-        {name: "addme",    mode: OutMode.ALL,    descr: "добавиться в подборку игроков"},
-        {name: "chatid",   mode: OutMode.ALL,    descr: "узнать свой chat-id"},
-        {name: "checkme",  mode: OutMode.ALL,    descr: "проверить свое место в списке зарегистрировавшихся участников"},
-        {name: "status",   mode: OutMode.ADMIN,  descr: "no description"},
-        {name: "getcount", mode: OutMode.ALL,    descr: "узнать количество зарегистрировавшихся"},
-        {name: "delme",    mode: OutMode.ALL,    descr: "удалить себя из списка"},
+        {"name": "start",    "mode": OutMode.IGNORE, "descr": "no description"},
+        {"name": "help",     "mode": OutMode.ALL,    "descr": "вывести все доступные команды"},
+        {"name": "addme",    "mode": OutMode.ALL,    "descr": "добавиться в подборку игроков"},
+        {"name": "chatid",   "mode": OutMode.ALL,    "descr": "узнать свой chat-id"},
+        {"name": "checkme",  "mode": OutMode.ALL,    "descr": "проверить свое место в списке зарегистрировавшихся участников"},
+        {"name": "status",   "mode": OutMode.ADMIN,  "descr": "no description"},
+        {"name": "getcount", "mode": OutMode.ALL,    "descr": "узнать количество зарегистрировавшихся"},
+        {"name": "delme",    "mode": OutMode.ALL,    "descr": "удалить себя из списка"},
     ]
     chat_id = message.chat.id
     isAdm = db.checkAdmin(chat_id)
     for func in func_list:
-        if OutMode.IGNORE == func.mode: continue
-        if OutMode.ADMIN == func.mode and not isAdm: continue
-        bot.send_message(chat_id, "/{} -- {}".format(func.name, func.descr))
+        if OutMode.IGNORE == func["mode"]: continue
+        if OutMode.ADMIN == func["mode"] and not isAdm: continue
+        bot.send_message(chat_id, "/{} -- {}".format(func["name"], func["descr"]))
 
-"""
-2018-02-25T16:57:48.896211+00:00 app[web.1]:  * Running on http://0.0.0.0:52838/ (Press CTRL+C to quit)
-2018-02-25T16:57:52.447121+00:00 app[web.1]: 10.99.40.4 - - [25/Feb/2018 16:57:52] "POST /468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE HTTP/1.1" 200 -
-2018-02-25T16:57:52.447953+00:00 app[web.1]: addme>> chat_id = 337968852
-2018-02-25T16:57:52.449127+00:00 app[web.1]: 2018-02-25 16:57:52,448 (util.py:64 WorkerThread1) ERROR - TeleBot: "TypeError occurred, args=("checkChatId() missing 1 required positional argument: 'chatid'",)
-2018-02-25T16:57:52.449131+00:00 app[web.1]: Traceback (most recent call last):
-2018-02-25T16:57:52.449134+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.6/site-packages/telebot/util.py", line 58, in run
-2018-02-25T16:57:52.449136+00:00 app[web.1]:     task(*args, **kwargs)
-2018-02-25T16:57:52.449137+00:00 app[web.1]:   File "bot.py", line 98, in addme
-2018-02-25T16:57:52.449139+00:00 app[web.1]:     if not db.checkChatId(chat_id):
-2018-02-25T16:57:52.449141+00:00 app[web.1]: TypeError: checkChatId() missing 1 required positional argument: 'chatid'
-2018-02-25T16:57:52.449732+00:00 app[web.1]: "
-"""
+
 
 
 @bot.message_handler(commands=["addme"])
@@ -103,7 +102,6 @@ def addme(message):
         bot.send_message(chat_id, "Ты можешь удалить себя из списка с помошью команды /del")
 
 def check(message):
-
     bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
     lock = threading.Lock()
     name = message.text
@@ -124,7 +122,6 @@ def check(message):
                 else:
                     wr = data["stats"]["p2"]["winRatio"]["value"]
                     bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
-                    #TODO: get 10 from config.lowest_winrate
                     if float(wr) < config.FortniteParam.lowest_winrate:
                         bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в конец списка")
                     else:
@@ -211,19 +208,20 @@ def reset(message):
 
 @bot.message_handler(commands=["threadtest"])
 def threadtest(message):
-    bot.send_message(message.chat.id, "Hi before lock")
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "Hi before lock")
     #блокировка
     lock1.acquire()
     cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-    bot.send_message(message.chat.id, "Last request in [{0}]".format(cur_time))
-    bot.send_message(message.chat.id, "Hi from lock")
+    bot.send_message(chat_id, "Last request in [{0}]".format(cur_time))
+    bot.send_message(chat_id, "Hi from lock")
     delay, every = 30, 5
     while delay > 0:
-        bot.send_message(message.chat.id, "I am alive. Wait {} sec".format(delay))
+        bot.send_message(chat_id, "I am alive. Wait {} sec".format(delay))
         delay -= every
         time.sleep(every)
     lock1.release()
-    bot.send_message(message.chat.id, "Hi after lock")
+    bot.send_message(chat_id, "Hi after lock")
 
 
 @server.route("/" + config.token, methods=["POST"])
