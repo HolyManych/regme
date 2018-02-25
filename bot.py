@@ -1,7 +1,8 @@
 import os
+import re
 import time
 import json
-import config
+import config # custom
 import random
 import telebot
 import pymongo
@@ -11,18 +12,37 @@ from lxml import html
 from telebot import types
 from flask import Flask, request
 
+#TODO: write command to FatherBot
+# addme
+# delme
+# checkme
+#
+
+#TODO: add to config
+# 1. name
+# 2. mobile number
+# 3. chat.id
+# 4. email
+# 5. lowest_winrate = 10.0 #like float number
+
+
+class DataBase:
+    def __init__(self):
+        pass
+
 
 client = pymongo.MongoClient(config.mongourl, connectTimeoutMS=30000)
 db = client.get_database("fortnite_regme")
+
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
 
 def pushPlayer(chatid, nick, wr):
     record = {
-    "_id": chatid,
-    "fortnite_name": nick,
-    "wr": wr,
-    "status": 0
+        "_id": chatid,
+        "fortnite_name": nick,
+        "wr": wr,
+        "status": 0
     }
     db.users_telegram.insert_one(record)
 
@@ -40,45 +60,50 @@ def setStatus(chatid):
 
 @bot.message_handler(commands=["start", "help"])
 def start(message):
-    bot.send_message(message.chat.id, "Чтобы добавиться в подборку игроков, воспользуйся командой /add")
-    bot.send_message(message.chat.id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /check")
-    bot.send_message(message.chat.id, "Если твой WinRate изменился, то воспользуйся командой /update")
-    bot.send_message(message.chat.id, "Чтобы удалить себя из списка, воспользуйся командой /del")
+    #TODO для админов расширенную функцию
+    send_id = message.chat.id
+    bot.send_message(send_id, "Чтобы добавиться в подборку игроков, воспользуйся командой /add")
+    bot.send_message(send_id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /check")
+    bot.send_message(send_id, "Чтобы удалить себя из списка, воспользуйся командой /del")
 
-@bot.message_handler(commands=["add"])
+@bot.message_handler(commands=["addme"])
 def addme(message):
     if not checkChatId(message.chat.id):
         sent = bot.send_message(message.chat.id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
         bot.register_next_step_handler(sent, check)
     else:
         bot.send_message(message.chat.id, "Ты уже присутствуешь в списке")
-        bot.send_message(message.chat.id, "Ты можешь удалить себя из списка с помошью команды /delme")
+        bot.send_message(message.chat.id, "Ты можешь удалить себя из списка с помошью команды /del")
 
 def check(message):
+    bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
     lock = threading.Lock()
     name = message.text
     name = name.lower()
     name = name.strip()
-    bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
     if not checkPlayer(name):
         lock.acquire()
         try:
             #DEBUG Проверка на частоту запросов
-            print("Last request in", time.time())
+            print("Last request in", time.gmtime(time.time()))
             r = requests.get(config.urlbase + name, headers=config.header)
             data = json.loads(r.text)
             if "stats" in data:
-                wr = data['stats']['p2']["winRatio"]["value"]
-                bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
-                if float(wr) < 10:
-                    bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в конец списка")
+                if "winRatio" not in data["stats"]["p2"]:
+                    bot.send_message(message.chat.id, "У тебя нет побед. Возвращайся, когда выиграешь.")
                 else:
-                    bot.send_message(message.chat.id, "Ты помещен(а) в список")
-                pushPlayer(message.chat.id, name, wr)
+                    wr = data["stats"]["p2"]["winRatio"]["value"]
+                    bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
+                    #TODO: get 10 from config.lower_winrate
+                    if float(wr) < 10.0:
+                        bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в конец списка")
+                    else:
+                        bot.send_message(message.chat.id, "Ты помещен(а) в список")
+                    pushPlayer(message.chat.id, name, wr)
             else:
                 bot.send_message(message.chat.id, "Не удалось найти такой ник")
         except Exception as e:
-            print(e)
+            print("check>> Exception:" + str(e))
             bot.send_message(message.chat.id, "Что-то пошло не так, попробуй позже")
         time.sleep(2)
         lock.release()
@@ -90,7 +115,7 @@ def check(message):
 def chatid(message):
     bot.send_message(message.chat.id, "Its your chatid: " + str(message.chat.id))
 
-@bot.message_handler(commands=["check"])
+@bot.message_handler(commands=["checkme"])
 def checkme(message):
     users = db.users_telegram
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
@@ -100,10 +125,12 @@ def checkme(message):
                 bot.send_message(message.chat.id, "Твое место в списке - " + str(i+1))
                 return
     else:
-        bot.send_message(message.chat.id, "Тебя нет в списке. Воспользуйся командой /addme")
+        bot.send_message(message.chat.id, "Тебя нет в списке. Воспользуйся командой /add")
+
 
 @bot.message_handler(commands=["status"])
 def any_msg(message):
+    #TODO: check duplicate answer yes/no
     if not checkAdmin(message.chat.id):
         bot.send_message(message.chat.id, "Ты не администратор")
         return
@@ -134,7 +161,7 @@ def getcount(message):
     count = db.users_telegram.count()
     bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
-@bot.message_handler(commands=["del"])
+@bot.message_handler(commands=["delme"])
 def delme(message):
     try:
         db.users_telegram.remove({"_id": message.chat.id})
@@ -142,17 +169,24 @@ def delme(message):
     except Exception as e:
         bot.send_message(message.chat.id, "Что-то пошло не так")
         print("Error on deleting", e)
+"""
+@bot.message_handler(commands=["reset"])
+def reset(message):
+    if not checkAdmin(message.chat.id):
+        bot.send_message(message.chat.id, "Ты не администратор")
+        return
+"""
 
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "POST", 200
+    return ("POST", 200)
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
-    return "CONNECTED", 200
+    return ("CONNECTED", 200)
 
 
 bot.send_message(337968852, "iam ready")
