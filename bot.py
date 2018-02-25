@@ -52,8 +52,9 @@ class DataBase:
 
 class OutMode(Enum):
     FIRST = 1
-
-
+    ADMIN = 2
+    USER  = 3
+    ALL   = 4
 
 db = DataBase
 bot = telebot.TeleBot(config.token)
@@ -73,14 +74,14 @@ def start_help(message):
     #   getcount
     #   delme
     func_list = [
-        {name: "start",    mode: "start", descr: ""},
-        {name: "help",     mode: "all", descr: ""},
-        {name: "addme",    mode: "start", descr: ""},
-        {name: "chatid",   mode: "start", descr: ""},
-        {name: "checkme",  mode: "start", descr: ""},
-        {name: "status",   mode: "start", descr: ""},
-        {name: "getcount", mode: "start", descr: ""},
-        {name: "delme",    mode: "start", descr: ""},
+        {name: "start",    mode: OutMode.FIRST, descr: ""},
+        {name: "help",     mode: OutMode.ALL,   descr: ""},
+        {name: "addme",    mode: OutMode.USER, descr: ""},
+        {name: "chatid",   mode: OutMode.ALL, descr: ""},
+        {name: "checkme",  mode: OutMode.USER, descr: ""},
+        {name: "status",   mode: OutMode., descr: ""},
+        {name: "getcount", mode: OutMode., descr: ""},
+        {name: "delme",    mode: OutMode., descr: ""},
     ]
     #TODO: differnt help for admin and user
     #TODO для админов расширенную функцию
@@ -89,14 +90,30 @@ def start_help(message):
     bot.send_message(send_id, "Чтобы проверить свое место в списке зарегистрировавшихся участников используй /check")
     bot.send_message(send_id, "Чтобы удалить себя из списка, воспользуйся командой /del")
 
+"""
+
+2018-02-25T15:52:16.725588+00:00 app[web.1]: 10.124.30.221 - - [25/Feb/2018 15:52:16] "POST /468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE HTTP/1.1" 200 -
+2018-02-25T15:52:16.726884+00:00 app[web.1]: 2018-02-25 15:52:16,726 (util.py:64 WorkerThread2) ERROR - TeleBot: "TypeError occurred, args=("checkChatId() missing 1 required positional argument: 'chatid'",)
+
+2018-02-25T15:52:16.726887+00:00 app[web.1]: Traceback (most recent call last):
+2018-02-25T15:52:16.726889+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.6/site-packages/telebot/util.py", line 58, in run
+2018-02-25T15:52:16.726890+00:00 app[web.1]:     task(*args, **kwargs)
+2018-02-25T15:52:16.726891+00:00 app[web.1]:   File "bot.py", line 94, in addme
+2018-02-25T15:52:16.726892+00:00 app[web.1]:     if not db.checkChatId(message.chat.id):
+2018-02-25T15:52:16.726893+00:00 app[web.1]: TypeError: checkChatId() missing 1 required positional argument: 'chatid'
+2018-02-25T15:52:16.726895+00:00 app[web.1]: "
+"""
+
+
 @bot.message_handler(commands=["addme"])
 def addme(message):
-    if not db.checkChatId(message.chat.id):
-        sent = bot.send_message(message.chat.id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
+    chat_id = message.chat.id
+    if not db.checkChatId(chat_id):
+        sent = bot.send_message(chat_id, 'Напиши свой ник в Fortnite без кавычек, скобок и прочего')
         bot.register_next_step_handler(sent, check)
     else:
-        bot.send_message(message.chat.id, "Ты уже присутствуешь в списке")
-        bot.send_message(message.chat.id, "Ты можешь удалить себя из списка с помошью команды /del")
+        bot.send_message(chat_id, "Ты уже присутствуешь в списке")
+        bot.send_message(chat_id, "Ты можешь удалить себя из списка с помошью команды /del")
 
 def check(message):
 
