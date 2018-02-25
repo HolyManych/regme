@@ -217,12 +217,10 @@ def threadtest(message):
     cur_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
     bot.send_message(message.chat.id, "Last request in [{0}]".format(cur_time))
     bot.send_message(message.chat.id, "Hi from lock")
-    delay = 30
-    every = 5
-    cur_time = 0
-    while cur_time < delay:
-        bot.send_message(message.chat.id, "I am alive. Wait {} sec".format(delay - cur_time))
-        cur_time += every
+    delay, every = 30, 5
+    while delay > 0:
+        bot.send_message(message.chat.id, "I am alive. Wait {} sec".format(delay))
+        delay -= every
         time.sleep(every)
     lock1.release()
     bot.send_message(message.chat.id, "Hi after lock")
