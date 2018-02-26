@@ -218,8 +218,8 @@ def reset(message):
     if not db.checkAdmin(message.chat.id):
         bot.send_message(message.chat.id, "Ты не администратор")
         return
-    users = db.getUsers
-    users.update({}, {"$set":{"status":0}})
+    db.dbf.users_telegram.update({}, {"$set":{"status":0 }})
+    bot.send_message(message.chat.id, "Успешно")
 
 
 ##############################################################################
