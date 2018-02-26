@@ -215,7 +215,7 @@ def delme(message):
 
 @bot.message_handler(commands=[cmds[Cmd.Id.reset].name])
 def reset(message):
-    if not checkAdmin(message.chat.id):
+    if not db.checkAdmin(message.chat.id):
         bot.send_message(message.chat.id, "Ты не администратор")
         return
     users = db.getUsers
