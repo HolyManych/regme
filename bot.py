@@ -59,6 +59,7 @@ class Cmd:
         delme      = 6
         status     = 7
         getcount   = 8
+        reset      = 9
 
     class Mode:
         ANY    = 0
@@ -74,14 +75,15 @@ class Cmd:
 # global variables
 ##############################################################################
 cmds = {
-    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY, "call for start bot"),
-    Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY, "print help messages"),
-    Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY, "check ur existed in queue"),
-    Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY, "print ur chat id"),
-    Cmd.Id.addme:    Cmd("addme",    Cmd.Mode.ANY, "add ur nickname in queue"),
-    Cmd.Id.delme:    Cmd("delme",    Cmd.Mode.ANY, "delete ur last nickname"),
+    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY,   "call for start bot"),
+    Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY,   "print help messages"),
+    Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY,   "check ur existed in queue"),
+    Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY,   "print ur chat id"),
+    Cmd.Id.addme:    Cmd("addme",    Cmd.Mode.ANY,   "add ur nickname in queue"),
+    Cmd.Id.delme:    Cmd("delme",    Cmd.Mode.ANY,   "delete ur last nickname"),
     Cmd.Id.status:   Cmd("status",   Cmd.Mode.ADMIN, "developing..."),
-    Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY, "print count of users in queue"),
+    Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY,   "print count of users in queue"),
+    Cmd.Id.reset:    Cmd("reset",    Cmd.Mode.ADMIN, "reset status after math"),
 }
 
 db = DataBase()
@@ -210,15 +212,19 @@ def delme(message):
     except Exception as e:
         bot.send_message(message.chat.id, "Что-то пошло не так")
         print("Error on deleting", e)
-"""
-@bot.message_handler(commands=["reset"])
+
+@bot.message_handler(commands=[cmds[Cmd.Id.reset].name])
 def reset(message):
-    if not checkAdmin(message.chat.id):
+    if not db.checkAdmin(message.chat.id):
         bot.send_message(message.chat.id, "Ты не администратор")
         return
-"""
+    db.dbf.users_telegram.update({}, {"$set":{"status":0 }}, multi=True)
+    bot.send_message(message.chat.id, "Успешно")
 
 
+##############################################################################
+# testing
+##############################################################################
 @bot.message_handler(commands=["threadtest"])
 def threadtest(message):
     chat_id = message.chat.id
@@ -236,7 +242,9 @@ def threadtest(message):
     lock1.release()
     bot.send_message(chat_id, "Hi after lock")
 
-
+##############################################################################
+# webhooks
+##############################################################################
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
