@@ -92,7 +92,7 @@ lock1 = threading.Lock()
 ##############################################################################
 # handlers
 ##############################################################################
-@bot.message_handler(commands=[cmd[Cmd.Id.start].name, cmd[Cmd.Id.help].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.start].name, cmds[Cmd.Id.help].name])
 def start_help(message):
     chat_id = message.chat.id
     isAdmin = db.checkAdmin(chat_id)
@@ -102,7 +102,7 @@ def start_help(message):
         bot.send_message(chat_id, "/{0} -- {1}".format(val.name, val.descr))
 
 
-@bot.message_handler(commands=[cmd[Cmd.Id.addme].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.addme].name])
 def addme(message):
     chat_id = message.chat.id
     if not db.checkChatId(chat_id):
@@ -110,7 +110,7 @@ def addme(message):
         bot.register_next_step_handler(sent, check)
     else:
         bot.send_message(chat_id, "Ты уже присутствуешь в списке")
-        bot.send_message(chat_id, "Ты можешь удалить себя из списка с помошью команды /{}".format(cmd[Cmd.Id.delme].name))
+        bot.send_message(chat_id, "Ты можешь удалить себя из списка с помошью команды /{}".format(cmds[Cmd.Id.delme].name))
 
 def check(message):
     bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
@@ -150,12 +150,12 @@ def check(message):
         bot.send_contact(message.chat.id, config.AboutSelf.mtel, config.AboutSelf.name)
 
 
-@bot.message_handler(commands=[cmd[Cmd.Id.chatid].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.chatid].name])
 def chatid(message):
     bot.send_message(message.chat.id, "Its your chatid: " + str(message.chat.id))
 
 
-@bot.message_handler(commands=[cmd[Cmd.Id.checkme].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.checkme].name])
 def checkme(message):
     users = db.getUsers()
     #isAdm = db.admins.find({"chat_id": chat_id}).count() == 1
@@ -165,10 +165,10 @@ def checkme(message):
                 bot.send_message(message.chat.id, "Твое место в списке - " + str(i+1))
                 return
     else:
-        bot.send_message(message.chat.id, "Тебя нет в списке. Воспользуйся командой /{}".format(cmd[Cmd.Id.addme].name))
+        bot.send_message(message.chat.id, "Тебя нет в списке. Воспользуйся командой /{}".format(cmds[Cmd.Id.addme].name))
 
 
-@bot.message_handler(commands=[cmd[Cmd.Id.status].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.status].name])
 def any_msg(message):
     #TODO: check duplicate answer yes/no
     if not db.checkAdmin(message.chat.id):
@@ -196,13 +196,13 @@ def callback_inline(call):
             #TODO Надо отправлять новые приглашения
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
 
-@bot.message_handler(commands=[cmd[Cmd.Id.getcount].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.getcount].name])
 def getcount(message):
     users = db.getUsers()
     count = users.count()
     bot.send_message(message.chat.id, "Всего игроков в списке " + str(count))
 
-@bot.message_handler(commands=[cmd[Cmd.Id.delme].name])
+@bot.message_handler(commands=[cmds[Cmd.Id.delme].name])
 def delme(message):
     try:
         db.dbf.users_telegram.remove({"_id": message.chat.id})
