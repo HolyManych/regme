@@ -42,8 +42,8 @@ class DataBase:
     def checkChatId(self, chatid):
         return self.dbf.users_telegram.find({"_id": chatid}).count() == 1
 
-    def setStatus(self, chatid):
-        self.dbf.users_telegram.update({"_id": chatid}, {"$set":{"status":1 }})
+    def setStatus(self, chatid, status):
+        self.dbf.users_telegram.update({"_id": chatid}, {"$set":{"status":status }})
 
 
 ##############################################################################
@@ -133,9 +133,9 @@ def check(message):
                 if "winRatio" not in data["stats"]["p2"]:
                     bot.send_message(message.chat.id, "У тебя нет побед. Возвращайся, когда выиграешь.")
                 else:
-                    wr = data["stats"]["p2"]["winRatio"]["value"]
+                    wr = float(data["stats"]["p2"]["winRatio"]["value"])
                     bot.send_message(message.chat.id, "Твой WinRate" + " - " + str(wr))
-                    if float(wr) < config.FortniteParam.lowest_winrate:
+                    if wr < config.FortniteParam.lowest_winrate:
                         bot.send_message(message.chat.id, "Твой WinRate слишком низок, но я все равно помещу тебя в конец списка")
                     else:
                         bot.send_message(message.chat.id, "Ты помещен(а) в список")
@@ -183,6 +183,7 @@ def any_msg(message):
     keyboard.add(noButton)
     #players = []
     users = db.getUsers()
+    #db.dbf.users_telegram.update({}, {"$set":{"status":0 }}, multi=True)
     for user in users.find().sort("wr", pymongo.DESCENDING).limit(99):
         #players.append(user["_id"])
         bot.send_message(user["_id"], "Будешь завтра учавствовать в турнире?", reply_markup=keyboard)
@@ -242,6 +243,11 @@ def threadtest(message):
         time.sleep(every)
     lock1.release()
     bot.send_message(chat_id, "Hi after lock")
+
+@bot.message_handler(commands=["updatetest"])
+def threadtest(message):
+    users = db.getUsers()
+    users.find().sort("wr", pymongo.DESCENDING).limit(99)
 
 ##############################################################################
 # webhooks
