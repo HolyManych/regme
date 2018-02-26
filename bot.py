@@ -218,7 +218,9 @@ def reset(message):
         return
 """
 
-
+##############################################################################
+# testing
+##############################################################################
 @bot.message_handler(commands=["threadtest"])
 def threadtest(message):
     chat_id = message.chat.id
@@ -236,7 +238,9 @@ def threadtest(message):
     lock1.release()
     bot.send_message(chat_id, "Hi after lock")
 
-
+##############################################################################
+# webhooks
+##############################################################################
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
