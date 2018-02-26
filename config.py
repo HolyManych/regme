@@ -19,7 +19,7 @@ class AboutSelf:
     vk      = "https://vk.com/holymanych"
 
     def getHelloMsg():
-        return "I was update or stand up"
+        return "I am here"
 
 # FORTNITE
 class FortniteParam:
