@@ -93,6 +93,7 @@ cmds = {
 
 db = DataBase()
 bot = telebot.TeleBot(config.token)
+abot = telebot.AsyncTeleBot(config.token, threaded=True)
 server = Flask(__name__)
 lock1 = threading.Lock()
 
@@ -283,18 +284,29 @@ def threadtest(message):
     users = db.getUsers()
     users.find().sort("wr", pymongo.DESCENDING).limit(99)
 
+#DEBUG
+@abot.message_handler(commands=["async"])
+def asynctest(message):
+    abot.send_message(message.chat.id, "Hello from async mode")
+
 ##############################################################################
 # webhooks
 ##############################################################################
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    #DEBUG
+    abot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+
     return ("POST", 200)
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
+    #DEBUG
+    abot.remove_webhook()
+    abot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
     return ("CONNECTED", 200)
 
 ##############################################################################
