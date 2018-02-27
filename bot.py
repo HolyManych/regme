@@ -237,7 +237,7 @@ def addadmin(message):
     textMes = textMes.strip()
     pattern = "[\/][a-z]*[ ](.*)"
     result = re.findall(pattern, textMes)
-    if len(result) = 0:
+    if len(result) == 0:
         bot.send_message(message.chat.id, "Команда введена неправильно. Введи в формате /addadmin #########")
         return
     res = result[0]
