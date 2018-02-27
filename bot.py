@@ -230,7 +230,7 @@ def reset(message):
 
 @bot.message_handler(commands=[cmds[Cmd.Id.addadmin].name])
 def addadmin(message):
-    if message.chat.id != config.AboutSelf.chat_id
+    if message.chat.id != int(config.AboutSelf.chat_id)
         bot.send_message(message.chat.id, "Ты не имеешь привелегий на эту команду")
         return
     textMes = message.text
