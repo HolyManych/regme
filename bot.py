@@ -245,7 +245,7 @@ def addadmin(message):
         try:
             isAdm = db.checkAdmin(res)
             if not isAdm:
-                pushAdmin(res)
+                db.pushAdmin(res)
                 bot.send_message(message.chat.id, "Добавлен")
             else:
                 bot.send_message(message.chat.id, "Уже есть в списке администраторов")
