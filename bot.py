@@ -30,6 +30,7 @@ class DataBase:
         }
         self.dbf.users_telegram.insert_one(record)
 
+
     def getUsers(self):
         return self.dbf.users_telegram
 
@@ -193,10 +194,11 @@ def callback_inline(call):
     # Если сообщение из чата с ботом
     if call.message:
         if call.data == "yes":
-            db.setStatus(call.message.chat.id)
+            db.setStatus(call.message.chat.id, 1)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Увидемся завтра в игре. Перед игрой я тебе скину ключ")
         else:
             #TODO Надо отправлять новые приглашения
+            db.setStatus(call.message.chat.id, -1)
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Хорошо, я напишу тебе, когда будет следующая игра")
 
 @bot.message_handler(commands=[cmds[Cmd.Id.getcount].name])
