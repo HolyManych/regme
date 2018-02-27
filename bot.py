@@ -88,7 +88,7 @@ cmds = {
     Cmd.Id.status:   Cmd("status",   Cmd.Mode.ADMIN, "developing..."),
     Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY,   "Количество игроков"),
     Cmd.Id.reset:    Cmd("reset",    Cmd.Mode.ADMIN, "Сбросить статус игроков после игры"),
-    Cmd.Id.reset:    Cmd("addadmin", Cmd.Mode.ADMIN, "Добавление админа"),
+    Cmd.Id.addadmin: Cmd("addadmin", Cmd.Mode.ADMIN, "Добавление админа"),
 }
 
 db = DataBase()
