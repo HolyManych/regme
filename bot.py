@@ -30,6 +30,8 @@ class DataBase:
         }
         self.dbf.users_telegram.insert_one(record)
 
+    def pushAdmin(self, chatid):
+        self.dbf.admins.insert_one({"_id": chatid})
 
     def getUsers(self):
         return self.dbf.users_telegram
@@ -61,6 +63,7 @@ class Cmd:
         status     = 7
         getcount   = 8
         reset      = 9
+        addadmin   = 10
 
     class Mode:
         ANY    = 0
@@ -76,15 +79,16 @@ class Cmd:
 # global variables
 ##############################################################################
 cmds = {
-    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY,   "call for start bot"),
-    Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY,   "print help messages"),
-    Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY,   "check ur existed in queue"),
-    Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY,   "print ur chat id"),
-    Cmd.Id.addme:    Cmd("addme",    Cmd.Mode.ANY,   "add ur nickname in queue"),
-    Cmd.Id.delme:    Cmd("delme",    Cmd.Mode.ANY,   "delete ur last nickname"),
+    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY,   "Старт"),
+    Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY,   "Вывод всех команд"),
+    Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY,   "Показывает место в подборе"),
+    Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY,   "Вывести номер пользователя"),
+    Cmd.Id.addme:    Cmd("addme",    Cmd.Mode.ANY,   "Добавиться в очередь подбора"),
+    Cmd.Id.delme:    Cmd("delme",    Cmd.Mode.ANY,   "Удалиться из очереди"),
     Cmd.Id.status:   Cmd("status",   Cmd.Mode.ADMIN, "developing..."),
-    Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY,   "print count of users in queue"),
-    Cmd.Id.reset:    Cmd("reset",    Cmd.Mode.ADMIN, "reset status after math"),
+    Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY,   "Количество игроков"),
+    Cmd.Id.reset:    Cmd("reset",    Cmd.Mode.ADMIN, "Сбросить статус игроков после игры"),
+    Cmd.Id.reset:    Cmd("addadmin", Cmd.Mode.ADMIN, "Добавление админа"),
 }
 
 db = DataBase()
@@ -223,6 +227,31 @@ def reset(message):
         return
     db.dbf.users_telegram.update({}, {"$set":{"status":0 }}, multi=True)
     bot.send_message(message.chat.id, "Успешно")
+
+@bot.message_handler(commands=[cmds[Cmd.Id.addadmin].name])
+def addadmin(message):
+    if message.chat.id != config.AboutSelf.chat_id
+        bot.send_message(message.chat.id, "Ты не имеешь привелегий на эту команду")
+        return
+    textMes = message.text
+    textMes = textMes.strip()
+    pattern = "[\/][a-z]*[ ](.*)"
+    result = re.findall(pattern, textMes)
+    res = result[0]
+    if res.isdigit():
+        try:
+            isAdm = db.checkAdmin(res)
+            if not isAdm:
+                pushAdmin(res)
+                bot.send_message(message.chat.id, "Добавлен")
+            else:
+                bot.send_message(message.chat.id, "Уже есть в списке администраторов")
+        except Exception as e:
+            print(e)
+            bot.send_message(message.chat.id, "Что-то пошло не так")
+    else:
+        bot.send_message(message.chat.id, "Команда введена неправильно. Введи в формате /addadmin #########")
+
 
 
 
