@@ -88,14 +88,14 @@ cmds = {
     Cmd.Id.status:   Cmd("status",   Cmd.Mode.ADMIN, "developing..."),
     Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY,   "Количество игроков"),
     Cmd.Id.reset:    Cmd("reset",    Cmd.Mode.ADMIN, "Сбросить статус игроков после игры"),
-    Cmd.Id.addadmin: Cmd("addadmin", Cmd.Mode.ADMIN, "Добавление админа"),
+    Cmd.Id.addadmin: Cmd("addadmin", Cmd.Mode.IGNORE, "Добавление админа"),
 }
 
 db = DataBase()
 bot = telebot.TeleBot(config.token)
-abot = telebot.AsyncTeleBot(config.token, threaded=True)
 server = Flask(__name__)
 lock1 = threading.Lock()
+lock = threading.Lock()
 
 ##############################################################################
 # handlers
@@ -122,12 +122,12 @@ def addme(message):
 
 def check(message):
     bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
-    lock = threading.Lock()
     name = message.text
     name = name.lower()
     name = name.strip()
     if not db.checkPlayer(name):
         lock.acquire()
+        start_time = time.time()
         try:
             #DEBUG Проверка на частоту запросов
             #TODO запись этого в db.logs
@@ -151,7 +151,9 @@ def check(message):
         except Exception as e:
             print("DEBUG: check: Exception:" + str(e))
             bot.send_message(message.chat.id, "Что-то пошло не так, попробуй позже")
-        time.sleep(2)
+        start_time = time.time() - start_time
+        needToSleep = 0.0 if (start_time >= 2.0) else (2.0 - start_time)
+        time.sleep(needToSleep)
         lock.release()
     else:
         bot.send_message(message.chat.id, "Такой ник уже есть среди участников. Если ты точно ввел(а) свой ник, то напиши ему:")
