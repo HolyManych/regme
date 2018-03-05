@@ -79,7 +79,7 @@ class Cmd:
 # global variables
 ##############################################################################
 cmds = {
-    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY,   "Старт"),
+    Cmd.Id.start:    Cmd("start",    Cmd.Mode.IGNORE,"Старт"),
     Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY,   "Вывод всех команд"),
     Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY,   "Показывает место в подборе"),
     Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY,   "Вывести номер пользователя"),
@@ -88,14 +88,13 @@ cmds = {
     Cmd.Id.status:   Cmd("status",   Cmd.Mode.ADMIN, "developing..."),
     Cmd.Id.getcount: Cmd("getcount", Cmd.Mode.ANY,   "Количество игроков"),
     Cmd.Id.reset:    Cmd("reset",    Cmd.Mode.ADMIN, "Сбросить статус игроков после игры"),
-    Cmd.Id.addadmin: Cmd("addadmin", Cmd.Mode.IGNORE, "Добавление админа"),
+    Cmd.Id.addadmin: Cmd("addadmin", Cmd.Mode.ADMIN, "Добавление админа"),
 }
 
 db = DataBase()
 bot = telebot.TeleBot(config.token)
 server = Flask(__name__)
 lock1 = threading.Lock()
-lock = threading.Lock()
 
 ##############################################################################
 # handlers
@@ -122,12 +121,12 @@ def addme(message):
 
 def check(message):
     bot.send_message(message.chat.id, "Проверяю, подожди. Это может занять некоторое время.  ⌛")
+    lock = threading.Lock()
     name = message.text
     name = name.lower()
     name = name.strip()
     if not db.checkPlayer(name):
         lock.acquire()
-        start_time = time.time()
         try:
             #DEBUG Проверка на частоту запросов
             #TODO запись этого в db.logs
@@ -151,9 +150,7 @@ def check(message):
         except Exception as e:
             print("DEBUG: check: Exception:" + str(e))
             bot.send_message(message.chat.id, "Что-то пошло не так, попробуй позже")
-        start_time = time.time() - start_time
-        needToSleep = 0.0 if (start_time >= 2.0) else (2.0 - start_time)
-        time.sleep(needToSleep)
+        time.sleep(2)
         lock.release()
     else:
         bot.send_message(message.chat.id, "Такой ник уже есть среди участников. Если ты точно ввел(а) свой ник, то напиши ему:")
@@ -286,10 +283,7 @@ def threadtest(message):
     users = db.getUsers()
     users.find().sort("wr", pymongo.DESCENDING).limit(99)
 
-#DEBUG
-@abot.message_handler(commands=["async"])
-def asynctest(message):
-    abot.send_message(message.chat.id, "Hello from async mode")
+
 
 ##############################################################################
 # webhooks
@@ -297,18 +291,12 @@ def asynctest(message):
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    #DEBUG
-    #abot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-
     return ("POST", 200)
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
-    #DEBUG
-    #abot.remove_webhook()
-    #abot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
     return ("CONNECTED", 200)
 
 ##############################################################################
