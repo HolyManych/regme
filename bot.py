@@ -291,18 +291,12 @@ def threadtest(message):
 @server.route("/" + config.token, methods=["POST"])
 def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    #DEBUG
-    #abot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-
     return ("POST", 200)
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
-    #DEBUG
-    #abot.remove_webhook()
-    #abot.set_webhook(url="https://fortnite-regme.herokuapp.com/" + config.token)
     return ("CONNECTED", 200)
 
 ##############################################################################
