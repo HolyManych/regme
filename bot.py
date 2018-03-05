@@ -79,7 +79,7 @@ class Cmd:
 # global variables
 ##############################################################################
 cmds = {
-    Cmd.Id.start:    Cmd("start",    Cmd.Mode.ANY,   "Старт"),
+    Cmd.Id.start:    Cmd("start",    Cmd.Mode.IGNORE,"Старт"),
     Cmd.Id.help:     Cmd("help",     Cmd.Mode.ANY,   "Вывод всех команд"),
     Cmd.Id.checkme:  Cmd("checkme",  Cmd.Mode.ANY,   "Показывает место в подборе"),
     Cmd.Id.chatid:   Cmd("chatid",   Cmd.Mode.ANY,   "Вывести номер пользователя"),
@@ -93,7 +93,6 @@ cmds = {
 
 db = DataBase()
 bot = telebot.TeleBot(config.token)
-abot = telebot.AsyncTeleBot(config.token, threaded=True)
 server = Flask(__name__)
 lock1 = threading.Lock()
 
@@ -284,10 +283,7 @@ def threadtest(message):
     users = db.getUsers()
     users.find().sort("wr", pymongo.DESCENDING).limit(99)
 
-#DEBUG
-@abot.message_handler(commands=["async"])
-def asynctest(message):
-    abot.send_message(message.chat.id, "Hello from async mode")
+
 
 ##############################################################################
 # webhooks
