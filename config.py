@@ -2,7 +2,7 @@ import os
 # -*- coding: utf-8 -*-
 
 #for telegramm
-token = deploy_env = os.environ.get('BOT_TOKEN', '')
+token = os.environ.get('BOT_TOKEN', '')
 
 #for fortnitetracker
 header = {"TRN-Api-Key": os.environ.get('FORT_TRECKER', '')}
@@ -10,7 +10,7 @@ platform = "pc"
 urlbase = "https://api.fortnitetracker.com/v1/profile/" + platform + "/"
 
 #for mlab
-mongourl = deploy_env = os.environ.get('MONGODB', '')
+mongourl = os.environ.get('MONGODB', '')
 
 class AboutSelf:
     email   = "name@yandex.ru"
