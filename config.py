@@ -11,7 +11,7 @@ urlbase = "https://api.fortnitetracker.com/v1/profile/" + platform + "/"
 
 #for mlab
 mongourl = os.environ.get('MONGODB', '')
-
+ 
 class AboutSelf:
     email   = "name@yandex.ru"
     mtel    = "+79995361024"

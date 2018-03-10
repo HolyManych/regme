@@ -261,7 +261,7 @@ def addadmin(message):
 ##############################################################################
 # testing
 ##############################################################################
-@bot.message_handler(commands=["threadtest"])
+@bot.message_handler(commands=["testthread"])
 def threadtest(message):
     chat_id = message.chat.id
     bot.send_message(chat_id, "Hi before lock")
@@ -278,16 +278,17 @@ def threadtest(message):
     lock1.release()
     bot.send_message(chat_id, "Hi after lock")
 
-@bot.message_handler(commands=["updatetest"])
+
+@bot.message_handler(commands=["testupdatetest"])
 def threadtest(message):
     users = db.getUsers()
     users.find().sort("wr", pymongo.DESCENDING).limit(99)
 
 
-@bot.message_handler(commands=["var"])
+@bot.message_handler(commands=["testvar"])
 def var(message):
     chat_id = message.chat.id
-    deploy_env = os.environ.get('BOT_TOKEN', '')
+    deploy_env = os.environ.get('TEST', '')
     bot.send_message(chat_id, deploy_env)
 
 
