@@ -284,7 +284,13 @@ def threadtest(message):
     users.find().sort("wr", pymongo.DESCENDING).limit(99)
 
 
-#test
+@bot.message_handler(commands=["var"])
+def var(message):
+    chat_id = message.chat.id
+    deploy_env = os.environ.get('TEST', '')
+    bot.send_message(chat_id, deploy_env)
+
+
 
 
 ##############################################################################
