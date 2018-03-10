@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 #for telegramm
-token = '468930047:AAFMt1a45Wl7W9NbjK5E_zlnJ6VAA0nZ-vE'
+token = deploy_env = os.environ.get('BOT_TOKEN', '')
 
 #for fortnitetracker
-header = {"TRN-Api-Key": "51c30244-9117-41db-8f25-9041b222dc43"}
+header = {"TRN-Api-Key": os.environ.get('FORT_TRECKER', '')}
 platform = "pc"
 urlbase = "https://api.fortnitetracker.com/v1/profile/" + platform + "/"
 
 #for mlab
-mongourl = "mongodb://adm:adm@ds243418.mlab.com:43418/fortnite_regme"
+mongourl = deploy_env = os.environ.get('MONGODB', '')
 
 class AboutSelf:
     email   = "name@yandex.ru"
