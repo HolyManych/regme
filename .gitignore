@@ -1,2 +1,5 @@
 fort_test.py
 MonDBtest.py
+__pycache__/
+tmp/
+
