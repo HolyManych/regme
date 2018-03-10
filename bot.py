@@ -287,7 +287,7 @@ def threadtest(message):
 @bot.message_handler(commands=["var"])
 def var(message):
     chat_id = message.chat.id
-    deploy_env = os.environ.get('TEST', '')
+    deploy_env = os.environ.get('BOT_TOKEN', '')
     bot.send_message(chat_id, deploy_env)
 
 
