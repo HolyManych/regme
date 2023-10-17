@@ -19,6 +19,6 @@ pymongo==3.6.0
 pyTelegramBotAPI==3.5.1
 requests==2.18.4
 six==1.11.0
-urllib3==1.22
+urllib3==1.26.18
 virtualenv==15.1.0
 virtualenv-clone==0.2.6
